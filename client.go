@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/openrdap/rdap/bootstrap"
+	"github.com/openrdap/rdap/logger"
 )
 
 // Client implements an RDAP client.
@@ -68,12 +69,13 @@ import (
 //   if ns, ok := resp.Object.(*rdap.Nameserver); ok {
 //     fmt.Printf("Handle=%s Domain=%s\n", ns.Handle, ns.LDHName)
 //   }
+
 type Client struct {
 	HTTP      *http.Client
 	Bootstrap *bootstrap.Client
 
 	// Optional callback function for verbose messages.
-	Verbose func(text string)
+	Logger logger.Logger
 
 	ServiceProviderExperiment bool
 	UserAgent                 string
@@ -101,25 +103,23 @@ func (c *Client) Do(req *Request) (*Response, error) {
 		c.Bootstrap = &bootstrap.Client{}
 	}
 
-	// Init Verbose callback?
-	if c.Verbose == nil {
-		c.Verbose = func(text string) {}
+	if c.Logger == nil {
+		c.Logger = logger.NoopLogger{}
 	}
 
-	c.Verbose("")
-	c.Verbose(fmt.Sprintf("client: Running..."))
-	c.Verbose(fmt.Sprintf("client: Request type  : %s", req.Type))
-	c.Verbose(fmt.Sprintf("client: Request query : %s", req.Query))
+	c.Logger.Logf(req.Context(), "client: Running...")
+	c.Logger.Logf(req.Context(), "client: Request Type: %s", req.Type)
+	c.Logger.Logf(req.Context(), "client: Request query: %s", req.Query)
 
 	var reqs []*Request
 
 	// Need to bootstrap the query?
 	if req.Server != nil {
-		c.Verbose(fmt.Sprintf("client: Request URL   : %s", req.URL()))
+		c.Logger.Logf(req.Context(), "client: Request URL   : %s", req.URL())
 
 		reqs = []*Request{req}
 	} else if req.Server == nil {
-		c.Verbose("client: Request URL   : TBD, bootstrap required")
+		c.Logger.Logf(req.ctx, "client: Request URL   : TBD, bootstrap required")
 
 		var bootstrapType *bootstrap.RegistryType = bootstrapTypeFor(req)
 
@@ -131,12 +131,6 @@ func (c *Client) Do(req *Request) (*Response, error) {
 					req.Type),
 			}
 		}
-
-		origBootstrapVerbose := c.Bootstrap.Verbose
-		c.Bootstrap.Verbose = c.Verbose
-		defer func() {
-			c.Bootstrap.Verbose = origBootstrapVerbose
-		}()
 
 		question := &bootstrap.Question{
 			RegistryType: *bootstrapType,
@@ -168,18 +162,18 @@ func (c *Client) Do(req *Request) (*Response, error) {
 	}
 
 	for i, r := range reqs {
-		c.Verbose(fmt.Sprintf("client: RDAP URL #%d is %s", i, r.URL()))
+		c.Logger.Logf(req.Context(), "client: RDAP URL #%d is %s", i, r.URL())
 	}
 
 	for _, r := range reqs {
-		c.Verbose(fmt.Sprintf("client: GET %s", r.URL()))
+		c.Logger.Logf(req.Context(), "client: GET %s", r.URL())
 
 		httpResponse := c.get(r)
 		resp.HTTP = append(resp.HTTP, httpResponse)
 
 		if httpResponse.Error != nil {
-			c.Verbose(fmt.Sprintf("client: error: %s",
-				httpResponse.Error))
+			c.Logger.Logf(req.Context(), "client: error: %s",
+				httpResponse.Error)
 
 			if r.Context().Err() == context.DeadlineExceeded {
 				return resp, httpResponse.Error
@@ -189,11 +183,11 @@ func (c *Client) Do(req *Request) (*Response, error) {
 		} else {
 			hrr := httpResponse.Response
 
-			c.Verbose(fmt.Sprintf("client: status-code=%d, content-type=%s, length=%d bytes, duration=%s",
+			c.Logger.Logf(req.Context(), "client: status-code=%d, content-type=%s, length=%d bytes, duration=%s",
 				hrr.StatusCode,
 				hrr.Header.Get("Content-Type"),
 				len(httpResponse.Body),
-				httpResponse.Duration))
+				httpResponse.Duration)
 
 			if len(httpResponse.Body) > 0 && hrr.StatusCode >= 200 && hrr.StatusCode <= 299 {
 				// Decode the response.
@@ -202,12 +196,12 @@ func (c *Client) Do(req *Request) (*Response, error) {
 				resp.Object, httpResponse.Error = decoder.Decode()
 
 				if httpResponse.Error != nil {
-					c.Verbose(fmt.Sprintf("client: Error decoding response: %s",
-						httpResponse.Error))
+					c.Logger.Logf(req.Context(), "client: Error decoding response: %s",
+						httpResponse.Error)
 					continue
 				}
 
-				c.Verbose("client: Successfully decoded response")
+				c.Logger.Logf(req.Context(), "client: Successfully decoded response")
 
 				// Implement additional fetches here.
 

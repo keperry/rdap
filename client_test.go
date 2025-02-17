@@ -5,9 +5,11 @@
 package rdap
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/openrdap/rdap/logger"
 	"github.com/openrdap/rdap/test"
 )
 
@@ -28,7 +30,9 @@ func TestClientQueryDomain(t *testing.T) {
 	defer test.Finish()
 
 	client := &Client{
-		Verbose: verboseFunc(),
+		Logger: logger.LoggerFunc(func(ctx context.Context, format string, args ...interface{}) {
+			verboseFunc()
+		}),
 	}
 
 	domain, err := client.QueryDomain("example.cz")
@@ -48,7 +52,9 @@ func TestClientQueryDomain404(t *testing.T) {
 	defer test.Finish()
 
 	client := &Client{
-		Verbose: verboseFunc(),
+		Logger: logger.LoggerFunc(func(ctx context.Context, format string, args ...interface{}) {
+			verboseFunc()
+		}),
 	}
 
 	_, err := client.QueryDomain("non-existent.cz")
@@ -66,7 +72,9 @@ func TestClientQueryDomainWrongType(t *testing.T) {
 	defer test.Finish()
 
 	client := &Client{
-		Verbose: verboseFunc(),
+		Logger: logger.LoggerFunc(func(ctx context.Context, format string, args ...interface{}) {
+			verboseFunc()
+		}),
 	}
 
 	_, err := client.QueryDomain("wrong-response-type.cz")
@@ -84,7 +92,9 @@ func TestClientQueryDomainMalformed(t *testing.T) {
 	defer test.Finish()
 
 	client := &Client{
-		Verbose: verboseFunc(),
+		Logger: logger.LoggerFunc(func(ctx context.Context, format string, args ...interface{}) {
+			verboseFunc()
+		}),
 	}
 
 	_, err := client.QueryDomain("malformed.cz")
