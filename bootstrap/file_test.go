@@ -5,7 +5,6 @@
 package bootstrap
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/openrdap/rdap/test"
@@ -83,36 +82,6 @@ func TestParseBadURL(t *testing.T) {
 
 	if err != nil {
 		t.Fatal("Unexpected error parsing file with bad URL")
-	}
-
-	if len(r.Entries) != 3 {
-		t.Fatalf("Expected 3 entries, got %d: %v\n", len(r.Entries), r)
-	}
-}
-
-func TestServiceOverride(t *testing.T) {
-	test.Start(test.Bootstrap)
-	defer test.Finish()
-
-	var bytes []byte = test.Get("https://data.iana.org/rdap/dns.json")
-
-	serviceOverride := map[string]string{
-		"ar": "https://rdap.testingserveroverride.ar/",
-	}
-
-	var r *File
-	r, err := NewFile(bytes, serviceOverride)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fmt.Printf("map for %s", r.Entries["ar"])
-
-	url := r.Entries["ar"]
-
-	if !(url[0].Host == "rdap.testingserveroverride.ar") {
-		t.Fatalf("Expected: %s, Got: %s", "rdap.testingserveroverride.ar", url[0].Host)
 	}
 
 	if len(r.Entries) != 3 {

@@ -146,7 +146,7 @@ type Client struct {
 	Cache            cache.RegistryCache // Service Registry cache. Default is a MemoryCache.
 	Logger           logger.Logger
 	registries       map[RegistryType]Registry
-	ServiceOverrides map[string]string
+	ServiceOverrides map[string]*url.URL
 }
 
 // A Registry implements bootstrap lookups.
@@ -281,7 +281,7 @@ func (c *Client) reloadFromCache(registry RegistryType) error {
 	return nil
 }
 
-func newRegistry(registry RegistryType, json []byte, serviceOverrides map[string]string) (Registry, error) {
+func newRegistry(registry RegistryType, json []byte, serviceOverrides map[string]*url.URL) (Registry, error) {
 	var s Registry
 	var err error
 

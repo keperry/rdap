@@ -23,7 +23,7 @@ type ServiceProviderRegistry struct {
 //
 // The document format is specified in
 // https://datatracker.ietf.org/doc/draft-hollenbeck-regext-rdap-object-tag/.
-func NewServiceProviderRegistry(json []byte, serviceOverride map[string]string) (*ServiceProviderRegistry, error) {
+func NewServiceProviderRegistry(json []byte, serviceOverride map[string]*url.URL) (*ServiceProviderRegistry, error) {
 	var r *File
 	r, err := NewFile(json, serviceOverride)
 
