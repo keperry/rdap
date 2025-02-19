@@ -7,7 +7,9 @@ package bootstrap
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
+	"strings"
 )
 
 // File represents a bootstrap registry file (i.e. {asn,dns,ipv4,ipv6}.json).
@@ -29,7 +31,7 @@ type File struct {
 }
 
 // NewFile constructs a File from a bootstrap registry file.
-func NewFile(jsonDocument []byte) (*File, error) {
+func NewFile(jsonDocument []byte, serviceOverride map[string]string) (*File, error) {
 	var doc struct {
 		Description string
 		Publication string
@@ -74,10 +76,23 @@ func NewFile(jsonDocument []byte) (*File, error) {
 
 		if len(urls) > 0 {
 			for _, entry := range entries {
+				if override, ok := hasOverride(entry, serviceOverride); ok {
+					oURL, err := url.Parse(override)
+					if err != nil {
+						return nil, errors.New(fmt.Sprintf("Service override cannot be parsed as a URL: %s:%s", entry, override))
+					}
+
+					urls = []*url.URL{oURL}
+				}
 				f.Entries[entry] = urls
 			}
 		}
 	}
 
 	return f, nil
+}
+
+func hasOverride(entry string, overrides map[string]string) (string, bool) {
+	override, ok := overrides[strings.ToLower(entry)]
+	return override, ok
 }

@@ -57,9 +57,9 @@ func (a asnRangeSorter) Less(i int, j int) bool {
 // NewASNRegistry creates an ASNRegistry from an ASN registry JSON document.
 //
 // The document format is specified in https://tools.ietf.org/html/rfc7484#section-5.3.
-func NewASNRegistry(json []byte) (*ASNRegistry, error) {
+func NewASNRegistry(json []byte, serviceOverride map[string]string) (*ASNRegistry, error) {
 	var registry *File
-	registry, err := NewFile(json)
+	registry, err := NewFile(json, serviceOverride)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing ASN registry: %s\n", err)

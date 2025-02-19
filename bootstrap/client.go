@@ -141,11 +141,12 @@ const (
 
 // Client implements an RDAP bootstrap client.
 type Client struct {
-	HTTP       *http.Client        // HTTP client.
-	BaseURL    *url.URL            // Base URL of the Service Registry files. Default is DefaultBaseURL.
-	Cache      cache.RegistryCache // Service Registry cache. Default is a MemoryCache.
-	Logger     logger.Logger
-	registries map[RegistryType]Registry
+	HTTP             *http.Client        // HTTP client.
+	BaseURL          *url.URL            // Base URL of the Service Registry files. Default is DefaultBaseURL.
+	Cache            cache.RegistryCache // Service Registry cache. Default is a MemoryCache.
+	Logger           logger.Logger
+	registries       map[RegistryType]Registry
+	ServiceOverrides map[string]string
 }
 
 // A Registry implements bootstrap lookups.
@@ -246,7 +247,7 @@ func (c *Client) download(ctx context.Context, registry RegistryType) ([]byte, R
 	}
 
 	var s Registry
-	s, err = newRegistry(registry, json)
+	s, err = newRegistry(registry, json, c.ServiceOverrides)
 
 	if err != nil {
 		return json, nil, err
@@ -269,7 +270,7 @@ func (c *Client) reloadFromCache(registry RegistryType) error {
 	}
 
 	var s Registry
-	s, err = newRegistry(registry, json)
+	s, err = newRegistry(registry, json, c.ServiceOverrides)
 
 	if err != nil {
 		return err
@@ -280,21 +281,21 @@ func (c *Client) reloadFromCache(registry RegistryType) error {
 	return nil
 }
 
-func newRegistry(registry RegistryType, json []byte) (Registry, error) {
+func newRegistry(registry RegistryType, json []byte, serviceOverrides map[string]string) (Registry, error) {
 	var s Registry
 	var err error
 
 	switch registry {
 	case ASN:
-		s, err = NewASNRegistry(json)
+		s, err = NewASNRegistry(json, serviceOverrides)
 	case DNS:
-		s, err = NewDNSRegistry(json)
+		s, err = NewDNSRegistry(json, serviceOverrides)
 	case IPv4:
-		s, err = NewNetRegistry(json, 4)
+		s, err = NewNetRegistry(json, 4, serviceOverrides)
 	case IPv6:
-		s, err = NewNetRegistry(json, 6)
+		s, err = NewNetRegistry(json, 6, serviceOverrides)
 	case ServiceProvider:
-		s, err = NewServiceProviderRegistry(json)
+		s, err = NewServiceProviderRegistry(json, serviceOverrides)
 	default:
 		panic("Unknown Registrytype")
 	}

@@ -46,13 +46,13 @@ func (a netEntrySorter) Less(i int, j int) bool {
 // NewNetRegistry creates a NetRegistry from an IPv4 or IPv6 registry JSON document. ipVersion must be 4 or 6.
 //
 // The document formats are specified in https://tools.ietf.org/html/rfc7484#section-5.1 and https://tools.ietf.org/html/rfc7484#section-5.2.
-func NewNetRegistry(json []byte, ipVersion int) (*NetRegistry, error) {
+func NewNetRegistry(json []byte, ipVersion int, serviceOverride map[string]string) (*NetRegistry, error) {
 	if ipVersion != 4 && ipVersion != 6 {
 		return nil, fmt.Errorf("Unknown IP version %d", ipVersion)
 	}
 
 	var registry *File
-	registry, err := NewFile(json)
+	registry, err := NewFile(json, serviceOverride)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing net registry file: %s", err)

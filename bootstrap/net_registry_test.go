@@ -17,7 +17,7 @@ func TestNetRegistryLookupsIPv4(t *testing.T) {
 	var bytes []byte = test.Get("https://data.iana.org/rdap/ipv4.json")
 
 	var n *NetRegistry
-	n, err := NewNetRegistry(bytes, 4)
+	n, err := NewNetRegistry(bytes, 4, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -66,7 +66,7 @@ func TestNetRegistryLookupsIPv6(t *testing.T) {
 	var bytes []byte = test.Get("https://data.iana.org/rdap/ipv6.json")
 
 	var n *NetRegistry
-	n, err := NewNetRegistry(bytes, 6)
+	n, err := NewNetRegistry(bytes, 6, nil)
 
 	if err != nil {
 		t.Fatal(err)

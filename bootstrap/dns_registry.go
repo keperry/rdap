@@ -20,9 +20,9 @@ type DNSRegistry struct {
 // NewDNSRegistry creates a DNSRegistry from a DNS registry JSON document.
 //
 // The document format is specified in https://tools.ietf.org/html/rfc7484#section-4.
-func NewDNSRegistry(json []byte) (*DNSRegistry, error) {
+func NewDNSRegistry(json []byte, serviceOverride map[string]string) (*DNSRegistry, error) {
 	var r *File
-	r, err := NewFile(json)
+	r, err := NewFile(json, serviceOverride)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing DNS bootstrap: %s", err)

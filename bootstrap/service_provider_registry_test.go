@@ -17,7 +17,7 @@ func TestServiceProviderRegistryLookups(t *testing.T) {
 	var bytes []byte = test.Get("https://test.rdap.net/rdap/serviceprovider-draft-03.json")
 
 	var s *ServiceProviderRegistry
-	s, err := NewServiceProviderRegistry(bytes)
+	s, err := NewServiceProviderRegistry(bytes, nil)
 
 	if err != nil {
 		t.Fatal(err)

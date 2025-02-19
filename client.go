@@ -93,7 +93,7 @@ func (c *Client) Do(req *Request) (*Response, error) {
 		}
 	}
 
-	// Init HTTP client?
+	// Init HTTP client?`
 	if c.HTTP == nil {
 		c.HTTP = &http.Client{}
 	}
