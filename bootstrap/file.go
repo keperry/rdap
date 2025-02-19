@@ -76,7 +76,7 @@ func NewFile(jsonDocument []byte, serviceOverride map[string]string) (*File, err
 
 		if len(urls) > 0 {
 			for _, entry := range entries {
-				if override, ok := hasOverride(entry, serviceOverride); ok {
+				if override, ok := serviceOverride[strings.ToLower(entry)]; ok {
 					oURL, err := url.Parse(override)
 					if err != nil {
 						return nil, errors.New(fmt.Sprintf("Service override cannot be parsed as a URL: %s:%s", entry, override))
@@ -90,9 +90,4 @@ func NewFile(jsonDocument []byte, serviceOverride map[string]string) (*File, err
 	}
 
 	return f, nil
-}
-
-func hasOverride(entry string, overrides map[string]string) (string, bool) {
-	override, ok := overrides[strings.ToLower(entry)]
-	return override, ok
 }
