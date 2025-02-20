@@ -250,14 +250,3 @@ func TestNewDNSRegistry(t *testing.T) {
 		})
 	}
 }
-
-func createTestURLSlice(u string) ([]*url.URL, error) {
-	parsedURL, err := url.Parse(u)
-	if err != nil {
-		return nil, err
-	}
-
-	urlSlice := []*url.URL{parsedURL}
-
-	return urlSlice, nil
-}
