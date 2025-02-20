@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/openrdap/rdap/logger"
-	"github.com/openrdap/rdap/test"
+	"github.com/keperry/rdap/logger"
+	"github.com/keperry/rdap/test"
 )
 
 func verboseFunc() func(text string) {

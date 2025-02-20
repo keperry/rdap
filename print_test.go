@@ -7,7 +7,7 @@ package rdap
 import (
 	"testing"
 
-	"github.com/openrdap/rdap/test"
+	"github.com/keperry/rdap/test"
 )
 
 func TestPrintDomain(t *testing.T) {
@@ -19,7 +19,7 @@ func TestPrintDomain(t *testing.T) {
 
 	_ = obj
 	_ = printer
-	//printer.Print(obj)
+	// printer.Print(obj)
 }
 
 func loadObject(filename string) RDAPObject {
