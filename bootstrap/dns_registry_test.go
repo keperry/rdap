@@ -151,7 +151,7 @@ func TestNewDNSRegistry(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "replaces server with rdap server override",
+			name: "replaces server for one entry when multiple entries are mapped to same service",
 			args: args{
 				json: test.LoadFile("../testdata/bootstrap/testingdnsmultipletld.json"),
 				serviceOverride: map[string]*url.URL{
