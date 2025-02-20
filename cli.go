@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/crypto/pkcs12"
 
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	kingpin "github.com/alecthomas/kingpin/v2"
 )
 
 var (
