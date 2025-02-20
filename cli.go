@@ -17,10 +17,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openrdap/rdap/bootstrap"
-	"github.com/openrdap/rdap/bootstrap/cache"
-	"github.com/openrdap/rdap/logger"
-	"github.com/openrdap/rdap/sandbox"
+	"github.com/keperry/rdap/bootstrap"
+	"github.com/keperry/rdap/bootstrap/cache"
+	"github.com/keperry/rdap/logger"
+	"github.com/keperry/rdap/sandbox"
 
 	"golang.org/x/crypto/pkcs12"
 

@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openrdap/rdap/test"
+	"github.com/keperry/rdap/test"
 )
 
 func TestNetRegistryLookupsDNSNested(t *testing.T) {
