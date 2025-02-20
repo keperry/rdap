@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"strings"
 )
 
 // File represents a bootstrap registry file (i.e. {asn,dns,ipv4,ipv6}.json).
@@ -29,7 +30,7 @@ type File struct {
 }
 
 // NewFile constructs a File from a bootstrap registry file.
-func NewFile(jsonDocument []byte) (*File, error) {
+func NewFile(jsonDocument []byte, serviceOverride map[string]*url.URL) (*File, error) {
 	var doc struct {
 		Description string
 		Publication string
@@ -74,7 +75,11 @@ func NewFile(jsonDocument []byte) (*File, error) {
 
 		if len(urls) > 0 {
 			for _, entry := range entries {
-				f.Entries[entry] = urls
+				if override, ok := serviceOverride[strings.ToLower(entry)]; ok {
+					f.Entries[entry] = []*url.URL{override}
+				} else {
+					f.Entries[entry] = urls
+				}
 			}
 		}
 	}

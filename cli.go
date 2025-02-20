@@ -19,6 +19,7 @@ import (
 
 	"github.com/openrdap/rdap/bootstrap"
 	"github.com/openrdap/rdap/bootstrap/cache"
+	"github.com/openrdap/rdap/logger"
 	"github.com/openrdap/rdap/sandbox"
 
 	"golang.org/x/crypto/pkcs12"
@@ -189,6 +190,10 @@ func RunCLI(args []string, stdout io.Writer, stderr io.Writer, options CLIOption
 		}
 	}
 
+	l := logger.LoggerFunc(func(ctx context.Context, format string, args ...interface{}) {
+		verbose(fmt.Sprintf(format, args...))
+	})
+
 	verbose(version)
 	verbose("")
 
@@ -322,7 +327,9 @@ func RunCLI(args []string, stdout io.Writer, stderr io.Writer, options CLIOption
 	// Custom TLS config.
 	tlsConfig := &tls.Config{InsecureSkipVerify: *insecureFlag}
 
-	bs := &bootstrap.Client{}
+	bs := &bootstrap.Client{
+		Logger: l,
+	}
 
 	// Custom bootstrap cache type/directory?
 	if *cacheDirFlag == "" {
@@ -476,7 +483,7 @@ func RunCLI(args []string, stdout io.Writer, stderr io.Writer, options CLIOption
 		HTTP:      httpClient,
 		Bootstrap: bs,
 
-		Verbose:                   verbose,
+		Logger:                    l,
 		UserAgent:                 version,
 		ServiceProviderExperiment: experiments["object_tag"],
 	}
@@ -496,7 +503,7 @@ func RunCLI(args []string, stdout io.Writer, stderr io.Writer, options CLIOption
 	var resp *Response
 	resp, err = client.Do(req)
 
-	verbose("")
+	verbose(fmt.Sprintf(""))
 	verbose(fmt.Sprintf("rdap: Finished in %s", time.Since(start)))
 
 	if err != nil {

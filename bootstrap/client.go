@@ -14,36 +14,38 @@
 // files.
 //
 // Basic usage:
-//   question := &bootstrap.Question{
-//     RegistryType: bootstrap.DNS,
-//     Query: "example.cz",
-//   }
 //
-//   b := &bootstrap.Client{}
+//	question := &bootstrap.Question{
+//	  RegistryType: bootstrap.DNS,
+//	  Query: "example.cz",
+//	}
 //
-//   var answer *bootstrap.Answer
-//   answer, err := b.Lookup(question)
+//	b := &bootstrap.Client{}
 //
-//   if err == nil {
-//     for _, url := range answer.URLs {
-//       fmt.Println(url)
-//     }
-//   }
+//	var answer *bootstrap.Answer
+//	answer, err := b.Lookup(question)
+//
+//	if err == nil {
+//	  for _, url := range answer.URLs {
+//	    fmt.Println(url)
+//	  }
+//	}
 //
 // Download and list the contents of the DNS Service Registry:
-//   b := &bootstrap.Client{}
 //
-//   // Before you can use a Registry, you need to download it first.
-//   err := b.Download(bootstrap.DNS) // Downloads https://data.iana.org/rdap/dns.json.
+//	b := &bootstrap.Client{}
 //
-//   if err == nil {
-//     var dns *DNSRegistry = b.DNS()
+//	// Before you can use a Registry, you need to download it first.
+//	err := b.Download(bootstrap.DNS) // Downloads https://data.iana.org/rdap/dns.json.
 //
-//     // Print TLDs with RDAP service.
-//     for tld, _ := range dns.File().Entries {
-//       fmt.Println(tld)
-//     }
-//   }
+//	if err == nil {
+//	  var dns *DNSRegistry = b.DNS()
+//
+//	  // Print TLDs with RDAP service.
+//	  for tld, _ := range dns.File().Entries {
+//	    fmt.Println(tld)
+//	  }
+//	}
 //
 // You can configure bootstrap.Client{} with a custom http.Client, base URL
 // (default https://data.iana.org/rdap), and custom cache. bootstrap.Question{}
@@ -68,16 +70,16 @@
 //
 // Disk cache usage:
 //
-//   b := bootstrap.NewClient()
-//   b.Cache = cache.NewDiskCache()
+//	b := bootstrap.NewClient()
+//	b.Cache = cache.NewDiskCache()
 //
-//   dsr := b.DNS()  // Tries to load dns.json from disk cache, doesn't exist yet, so returns nil.
-//   b.Download(bootstrap.DNS) // Downloads dns.json, saves to disk cache.
+//	dsr := b.DNS()  // Tries to load dns.json from disk cache, doesn't exist yet, so returns nil.
+//	b.Download(bootstrap.DNS) // Downloads dns.json, saves to disk cache.
 //
-//   b2 := bootstrap.NewClient()
-//   b2.Cache = cache.NewDiskCache()
+//	b2 := bootstrap.NewClient()
+//	b2.Cache = cache.NewDiskCache()
 //
-//   dsr2 := b.DNS()  // Loads dns.json from disk cache.
+//	dsr2 := b.DNS()  // Loads dns.json from disk cache.
 //
 // This package also implements the experimental Service Provider registry. Due
 // to the experimental nature, no Service Registry file exists on data.iana.org
@@ -98,6 +100,7 @@ import (
 	"time"
 
 	"github.com/openrdap/rdap/bootstrap/cache"
+	"github.com/openrdap/rdap/logger"
 )
 
 // A RegistryType represents a bootstrap registry type.
@@ -138,14 +141,12 @@ const (
 
 // Client implements an RDAP bootstrap client.
 type Client struct {
-	HTTP    *http.Client        // HTTP client.
-	BaseURL *url.URL            // Base URL of the Service Registry files. Default is DefaultBaseURL.
-	Cache   cache.RegistryCache // Service Registry cache. Default is a MemoryCache.
-
-	// Optional callback function for verbose messages.
-	Verbose func(text string)
-
-	registries map[RegistryType]Registry
+	HTTP             *http.Client        // HTTP client.
+	BaseURL          *url.URL            // Base URL of the Service Registry files. Default is DefaultBaseURL.
+	Cache            cache.RegistryCache // Service Registry cache. Default is a MemoryCache.
+	Logger           logger.Logger
+	registries       map[RegistryType]Registry
+	ServiceOverrides map[string]*url.URL
 }
 
 // A Registry implements bootstrap lookups.
@@ -170,6 +171,10 @@ func (c *Client) init() {
 
 	if c.BaseURL == nil {
 		c.BaseURL, _ = url.Parse(DefaultBaseURL)
+	}
+
+	if c.Logger == nil {
+		c.Logger = logger.NoopLogger{}
 	}
 }
 
@@ -242,7 +247,7 @@ func (c *Client) download(ctx context.Context, registry RegistryType) ([]byte, R
 	}
 
 	var s Registry
-	s, err = newRegistry(registry, json)
+	s, err = newRegistry(registry, json, c.ServiceOverrides)
 
 	if err != nil {
 		return json, nil, err
@@ -265,7 +270,7 @@ func (c *Client) reloadFromCache(registry RegistryType) error {
 	}
 
 	var s Registry
-	s, err = newRegistry(registry, json)
+	s, err = newRegistry(registry, json, c.ServiceOverrides)
 
 	if err != nil {
 		return err
@@ -276,21 +281,21 @@ func (c *Client) reloadFromCache(registry RegistryType) error {
 	return nil
 }
 
-func newRegistry(registry RegistryType, json []byte) (Registry, error) {
+func newRegistry(registry RegistryType, json []byte, serviceOverrides map[string]*url.URL) (Registry, error) {
 	var s Registry
 	var err error
 
 	switch registry {
 	case ASN:
-		s, err = NewASNRegistry(json)
+		s, err = NewASNRegistry(json, serviceOverrides)
 	case DNS:
-		s, err = NewDNSRegistry(json)
+		s, err = NewDNSRegistry(json, serviceOverrides)
 	case IPv4:
-		s, err = NewNetRegistry(json, 4)
+		s, err = NewNetRegistry(json, 4, serviceOverrides)
 	case IPv6:
-		s, err = NewNetRegistry(json, 6)
+		s, err = NewNetRegistry(json, 6, serviceOverrides)
 	case ServiceProvider:
-		s, err = NewServiceProviderRegistry(json)
+		s, err = NewServiceProviderRegistry(json, serviceOverrides)
 	default:
 		panic("Unknown Registrytype")
 	}
@@ -301,51 +306,48 @@ func newRegistry(registry RegistryType, json []byte) (Registry, error) {
 // Lookup returns the RDAP base URLs for the bootstrap question |question|.
 func (c *Client) Lookup(question *Question) (*Answer, error) {
 	c.init()
-	if c.Verbose == nil {
-		c.Verbose = func(text string) {}
-	}
 
-	c.Verbose("  bootstrap: Looking up...")
-	c.Verbose(fmt.Sprintf("  bootstrap: Question type : %s", question.RegistryType))
-	c.Verbose(fmt.Sprintf("  bootstrap: Question query: %s", question.Query))
+	c.Logger.Logf(question.Context(), "  bootstrap: Looking up...")
+	c.Logger.Logf(question.Context(), "  bootstrap: Question type : %s", question.RegistryType)
+	c.Logger.Logf(question.Context(), "  bootstrap: Question query: %s", question.Query)
 
 	registry := question.RegistryType
 
 	var state cache.FileState = c.Cache.State(c.filenameFor(registry))
-	c.Verbose(fmt.Sprintf("  bootstrap: Cache state: %s: %s", c.filenameFor(registry), state))
+	c.Logger.Logf(question.Context(), "  bootstrap: Cache state: %s: %s", c.filenameFor(registry), state)
 
 	var forceDownload bool
 	if state == cache.ShouldReload {
 		if err := c.reloadFromCache(registry); err != nil {
 			forceDownload = true
 
-			c.Verbose(fmt.Sprintf("  bootstrap: Cache load error (%s), downloading...", err))
+			c.Logger.Logf(question.Context(), "  bootstrap: Cache load error (%s), downloading...", err)
 		}
 	}
 
 	if c.registries[registry] == nil || forceDownload {
-		c.Verbose(fmt.Sprintf("  bootstrap: Downloading %s", registry.Filename()))
+		c.Logger.Logf(question.Context(), "  bootstrap: Downloading %s", registry.Filename())
 
 		err := c.DownloadWithContext(question.Context(), registry)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		c.Verbose("  bootstrap: Using cached Service Registry file")
+		c.Logger.Logf(question.Context(), "  bootstrap: Using cached Service Registry file")
 	}
 
 	answer, err := c.registries[registry].Lookup(question)
 
 	if answer != nil {
-		c.Verbose(fmt.Sprintf("  bootstrap: Looked up '%s'", answer.Query))
+		c.Logger.Logf(question.Context(), "  bootstrap: Looked up '%s'", answer.Query)
 		if answer.Entry != "" {
-			c.Verbose(fmt.Sprintf("  bootstrap: Matching entry '%s'", answer.Entry))
+			c.Logger.Logf(question.Context(), "  bootstrap: Matching entry '%s'", answer.Entry)
 		} else {
-			c.Verbose(fmt.Sprintf("  bootstrap: No match"))
+			c.Logger.Logf(question.Context(), "  bootstrap: No match")
 		}
 
 		for i, url := range answer.URLs {
-			c.Verbose(fmt.Sprintf("  bootstrap: Service URL #%d: '%s'", i+1, url))
+			c.Logger.Logf(question.Context(), "  bootstrap: Service URL #%d: '%s'", i+1, url)
 		}
 	}
 
@@ -363,7 +365,6 @@ func (c *Client) ASN() *ASNRegistry {
 	return s
 }
 
-//
 // DNS returns the current DNS Registry (or nil if the registry file hasn't been Download()ed).
 //
 // This function never initiates a network transfer.

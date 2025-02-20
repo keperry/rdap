@@ -17,7 +17,7 @@ func TestParseValid(t *testing.T) {
 	var bytes []byte = test.Get("https://data.iana.org/rdap/dns.json")
 
 	var r *File
-	r, err := NewFile(bytes)
+	r, err := NewFile(bytes, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -34,7 +34,7 @@ func TestParseEmpty(t *testing.T) {
 
 	var bytes []byte = test.Get("https://www.example.org/dns_empty.json")
 
-	_, err := NewFile(bytes)
+	_, err := NewFile(bytes, nil)
 
 	if err == nil {
 		t.Fatal("Unexpected success parsing empty file")
@@ -47,7 +47,7 @@ func TestParseSyntaxError(t *testing.T) {
 
 	var bytes []byte = test.Get("https://www.example.org/dns_syntax_error.json")
 
-	_, err := NewFile(bytes)
+	_, err := NewFile(bytes, nil)
 
 	if err == nil {
 		t.Fatal("Unexpected success parsing file with syntax error")
@@ -60,7 +60,7 @@ func TestParseBadServices(t *testing.T) {
 
 	var bytes []byte = test.Get("https://www.example.org/dns_bad_services.json")
 
-	_, err := NewFile(bytes)
+	_, err := NewFile(bytes, nil)
 
 	if err == nil {
 		t.Fatal("Unexpected success parsing file with bad services array")
@@ -74,7 +74,7 @@ func TestParseBadURL(t *testing.T) {
 	var bytes []byte = test.Get("https://www.example.org/dns_bad_url.json")
 
 	var r *File
-	r, err := NewFile(bytes)
+	r, err := NewFile(bytes, nil)
 
 	if err != nil {
 		t.Fatal(err)

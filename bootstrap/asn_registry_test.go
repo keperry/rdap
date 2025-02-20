@@ -17,7 +17,7 @@ func TestNetRegistryLookupsASN(t *testing.T) {
 	var bytes []byte = test.Get("https://data.iana.org/rdap/asn.json")
 
 	var n *ASNRegistry
-	n, err := NewASNRegistry(bytes)
+	n, err := NewASNRegistry(bytes, nil)
 
 	if err != nil {
 		t.Fatal(err)
