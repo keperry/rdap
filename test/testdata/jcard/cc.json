@@ -1,0 +1,63 @@
+[
+  "vcard",
+  [
+    [
+      "version",
+      {},
+      "text",
+      "4.0"
+    ],
+    [
+      "kind",
+      {},
+      "text",
+      "individual"
+    ],
+    [
+      "fn",
+      {},
+      "text",
+      "Domain Backend"
+    ],
+    [
+      "org",
+      {
+        "type": "work"
+      },
+      "text",
+      "GoDaddy"
+    ],
+    [
+      "adr",
+      {
+        "cc": "US"
+      },
+      "text",
+      [
+        "",
+        "",
+        "1 Parsons Drive ",
+        "Hiawatha",
+        "Iowa",
+        "52233",
+        ""
+      ]
+    ],
+    [
+      "tel",
+      {
+        "type": [
+          "voice"
+        ]
+      },
+      "uri",
+      "tel:+1.3192943900"
+    ],
+    [
+      "contact-uri",
+      {},
+      "uri",
+      "mailto:dombeplat@godaddy.com"
+    ]
+  ]
+]

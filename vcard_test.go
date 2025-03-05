@@ -165,3 +165,52 @@ func TestVCardQuickAccessors(t *testing.T) {
 		t.Errorf("Got %v expected %v\n", got, expected)
 	}
 }
+
+func TestVCardNew(t *testing.T) {
+	j, err := NewVCard(test.LoadFile("jcard/cc.json"))
+	if j == nil || err != nil {
+		t.Errorf("jCard parse failed %v %s\n", j, err)
+	}
+
+	got := []string{
+		j.Name(),
+		j.POBox(),
+		j.ExtendedAddress(),
+		j.StreetAddress(),
+		j.Locality(),
+		j.Region(),
+		j.PostalCode(),
+		j.Country(),
+		j.Tel(),
+		j.Fax(),
+		j.Email(),
+		j.ContactURI(),
+		j.Org(),
+	}
+
+	expected := []string{
+		"Domain Backend",
+		"",
+		"",
+		"1 Parsons Drive ",
+		"Hiawatha",
+		"Iowa",
+		"52233",
+		"US",
+		"tel:+1.3192943900",
+		"",
+		"",
+		"mailto:dombeplat@godaddy.com",
+		"GoDaddy",
+	}
+
+	if !reflect.DeepEqual(got, expected) {
+		t.Errorf("Got %v expected %v\n", got, expected)
+	}
+
+	for i := range expected {
+		if got[i] != expected[i] {
+			t.Errorf("Got %v expected %v\n", got[i], expected[i])
+		}
+	}
+}
